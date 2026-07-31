@@ -7,6 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.5",
     "asyncpg>=0.31.0",
+    "bcrypt==4.0.1",
     "celery>=5.6.3",
     "fastapi>=0.140.13",
     "passlib[bcrypt]>=1.7.4",
