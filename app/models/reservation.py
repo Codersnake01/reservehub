@@ -20,6 +20,7 @@ class Reservation(Base):
     status: Mapped[ReservationStatus] = mapped_column(
         SAEnum(ReservationStatus), default=ReservationStatus.PENDING, nullable=False
     )
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
