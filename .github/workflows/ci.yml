@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite+aiosqlite:///./test.db
+      SECRET_KEY: ci-secret-key
+      REDIS_URL: redis://localhost:6379/0
+      EMAIL_HOST: localhost
+      EMAIL_PORT: 1025
+      EMAIL_USE_TLS: false
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        run: pip install uv
+      - name: Install dependencies
+        run: uv sync
+      - name: Lint with ruff
+        run: uv run ruff check .
+      - name: Type check with mypy
+        run: uv run mypy app
+      - name: Test with pytest & coverage
+        run: uv run pytest --cov=app --cov-report=xml --cov-report=term
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: true
