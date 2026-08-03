@@ -34,7 +34,9 @@ jobs:
       - name: Install uv
         run: pip install uv
       - name: Install dependencies
-        run: uv sync
+        run: |
+          uv sync
+          uv pip install ruff mypy
       - name: Lint with ruff
         run: uv run ruff check .
       - name: Type check with mypy
