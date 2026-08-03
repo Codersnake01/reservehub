@@ -1,0 +1,13 @@
+name: Keep-Alive
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Cada 6 horas
+  workflow_dispatch:        # Para ejecutarlo manualmente
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping ReserveHub API
+        run: curl -s -o /dev/null -w "%{http_code}" https://reservehub-k3dh.onrender.com/api/v1/health
