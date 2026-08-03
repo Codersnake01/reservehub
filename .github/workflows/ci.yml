@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv sync
-          uv pip install ruff mypy
+          uv pip install ruff mypy pytest pytest-asyncio pytest-cov httpx aiosqlite
       - name: Lint with ruff
         run: uv run ruff check .
       - name: Type check with mypy

@@ -47,11 +47,13 @@ async def get_availability(
         # mypy no infiere correctamente los tipos de SQLAlchemy Time -> time,
         # por eso añadimos los comentarios de ignorar tipo.
         current = datetime.combine(
-            query_date, sched.start_time  # type: ignore[arg-type]
+            query_date,
+            sched.start_time,  # type: ignore[arg-type]
         )
         current = current.replace(tzinfo=timezone.utc)
         end_dt = datetime.combine(
-            query_date, sched.end_time  # type: ignore[arg-type]
+            query_date,
+            sched.end_time,  # type: ignore[arg-type]
         )
         end_dt = end_dt.replace(tzinfo=timezone.utc)
 
