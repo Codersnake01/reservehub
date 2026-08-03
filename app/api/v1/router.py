@@ -1,5 +1,13 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import health, auth, services, schedules, availability, reservations
+
+from app.api.v1.endpoints import (
+    auth,
+    availability,
+    health,
+    reservations,
+    schedules,
+    services,
+)
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])

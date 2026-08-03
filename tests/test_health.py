@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, MagicMock
+
 
 @pytest.mark.anyio
 async def test_health_check(client):
@@ -8,4 +8,4 @@ async def test_health_check(client):
     data = response.json()
     assert data["status"] == "ok"
     assert data["database"] == "connected"
-    assert data["redis"] == "connected"  # Se conecta al Redis de Docker
+    assert data["redis"] == "connected"

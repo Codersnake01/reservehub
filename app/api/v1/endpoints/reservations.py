@@ -1,28 +1,40 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.reservation import Reservation, ReservationStatus
 from app.models.service import Service
-from app.schemas.reservation import ReservationCreate, ReservationResponse
-from app.schemas.confirm import ConfirmReservationRequest
-from app.api.deps import get_current_user
 from app.models.user import User
+from app.schemas.confirm import ConfirmReservationRequest
+from app.schemas.reservation import ReservationCreate, ReservationResponse
 from app.tasks.email_tasks import send_confirmation_email
 
 router = APIRouter()
 
-@router.post("/reservations", response_model=ReservationResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/reservations",
+    response_model=ReservationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_reservation(
     reservation_in: ReservationCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if current_user.role != "client":
-        raise HTTPException(status_code=403, detail="Only clients can make reservations")
+        raise HTTPException(
+            status_code=403,
+            detail="Only clients can make reservations",
+        )
 
-    result = await db.execute(select(Service).where(Service.id == reservation_in.service_id))
+    result = await db.execute(
+        select(Service).where(Service.id == reservation_in.service_id)
+    )
     service = result.scalars().first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
@@ -53,14 +65,20 @@ async def create_reservation(
     await db.refresh(reservation)
     return reservation
 
-@router.patch("/reservations/{reservation_id}/confirm", response_model=ReservationResponse)
+
+@router.patch(
+    "/reservations/{reservation_id}/confirm",
+    response_model=ReservationResponse,
+)
 async def confirm_reservation(
     reservation_id: int,
     confirm_data: ConfirmReservationRequest,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Reservation).where(Reservation.id == reservation_id))
+    result = await db.execute(
+        select(Reservation).where(Reservation.id == reservation_id)
+    )
     reservation = result.scalars().first()
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
@@ -71,7 +89,8 @@ async def confirm_reservation(
     if reservation.version != confirm_data.version:
         raise HTTPException(
             status_code=409,
-            detail="Conflict: reservation has been modified. Please refresh and try again.",
+            detail="Conflict: reservation has been modified. "
+            "Please refresh and try again.",
         )
 
     reservation.status = ReservationStatus.CONFIRMED
@@ -83,13 +102,19 @@ async def confirm_reservation(
 
     return reservation
 
-@router.post("/reservations/{reservation_id}/test-email", status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/reservations/{reservation_id}/test-email",
+    status_code=status.HTTP_200_OK,
+)
 async def test_email(
     reservation_id: int,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Reservation).where(Reservation.id == reservation_id))
+    result = await db.execute(
+        select(Reservation).where(Reservation.id == reservation_id)
+    )
     reservation = result.scalars().first()
     if not reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")

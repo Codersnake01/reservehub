@@ -1,9 +1,12 @@
-from pydantic import BaseModel
 from datetime import datetime
+
+from pydantic import BaseModel
+
 
 class ReservationCreate(BaseModel):
     service_id: int
     start_time: datetime
+
 
 class ReservationResponse(BaseModel):
     id: int

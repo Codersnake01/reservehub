@@ -1,11 +1,12 @@
 from celery import Celery
+
 from app.core.config import settings
 
 celery_app = Celery(
     "reservehub",
     broker=settings.REDIS_URL,
-    backend=settings.REDIS_URL, # Para guardar resultados (opcional)
-    include=["app.tasks.email_tasks"] # Importante: carga las tareas al iniciar
+    backend=settings.REDIS_URL,
+    include=["app.tasks.email_tasks"],
 )
 
 celery_app.conf.update(

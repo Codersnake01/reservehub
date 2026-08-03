@@ -3,18 +3,15 @@ from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
-
-# --- Importar la base y los modelos para que Alembic los detecte ---
-from app.db.base import Base
 from app.core.config import settings
-from app.models.user import User          # noqa: F401
-from app.models.service import Service    # noqa: F401
-from app.models.schedule import Schedule  # noqa: F401
+from app.db.base import Base
 from app.models.reservation import Reservation  # noqa: F401
-# -----------------------------------------------------------------
+from app.models.schedule import Schedule  # noqa: F401
+from app.models.service import Service  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
@@ -25,6 +22,8 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     url = str(settings.DATABASE_URL)
+    if "sslmode=require" in url:
+        url = url.replace("?sslmode=require", "")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -42,13 +41,17 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_async_migrations() -> None:
-    configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = str(settings.DATABASE_URL)
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
+    db_url = str(settings.DATABASE_URL)
+
+    if "sslmode=require" in db_url:
+        db_url = db_url.replace("?sslmode=require", "")
+
+    connectable = create_async_engine(
+        db_url,
+        connect_args={"ssl": True},
         poolclass=pool.NullPool,
     )
+
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()

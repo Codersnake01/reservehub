@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.service import Service
-from app.schemas.service import ServiceCreate, ServiceUpdate, ServiceResponse
-from app.api.deps import get_current_user
 from app.models.user import User
+from app.schemas.service import ServiceCreate, ServiceResponse, ServiceUpdate
 
 router = APIRouter()
+
 
 @router.get("/", response_model=list[ServiceResponse])
 async def list_services(
@@ -17,14 +19,22 @@ async def list_services(
     result = await db.execute(select(Service))
     return result.scalars().all()
 
-@router.post("/", response_model=ServiceResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/",
+    response_model=ServiceResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_service(
     service_in: ServiceCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if current_user.role != "provider":
-        raise HTTPException(status_code=403, detail="Only providers can create services")
+        raise HTTPException(
+            status_code=403,
+            detail="Only providers can create services",
+        )
     service = Service(
         name=service_in.name,
         description=service_in.description,
@@ -36,6 +46,7 @@ async def create_service(
     await db.commit()
     await db.refresh(service)
     return service
+
 
 @router.put("/{service_id}", response_model=ServiceResponse)
 async def update_service(
@@ -56,6 +67,7 @@ async def update_service(
     await db.commit()
     await db.refresh(service)
     return service
+
 
 @router.delete("/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_service(
