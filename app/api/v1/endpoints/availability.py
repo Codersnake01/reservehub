@@ -44,11 +44,18 @@ async def get_availability(
 
     free_slots = []
     for sched in schedules:
-        start_time = sched.start_time
-        end_time = sched.end_time
-        current = datetime.combine(query_date, start_time, tzinfo=timezone.utc)
-        end = datetime.combine(query_date, end_time, tzinfo=timezone.utc)
-        while current + timedelta(minutes=service.duration_minutes) <= end:
+        # mypy no infiere correctamente los tipos de SQLAlchemy Time -> time,
+        # por eso añadimos los comentarios de ignorar tipo.
+        current = datetime.combine(
+            query_date, sched.start_time  # type: ignore[arg-type]
+        )
+        current = current.replace(tzinfo=timezone.utc)
+        end_dt = datetime.combine(
+            query_date, sched.end_time  # type: ignore[arg-type]
+        )
+        end_dt = end_dt.replace(tzinfo=timezone.utc)
+
+        while current + timedelta(minutes=service.duration_minutes) <= end_dt:
             slot_end = current + timedelta(minutes=service.duration_minutes)
             free_slots.append(
                 {

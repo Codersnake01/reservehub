@@ -21,7 +21,9 @@ async def list_schedules(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(Schedule).where(Schedule.service_id == service_id))
+    result = await db.execute(
+        select(Schedule).where(Schedule.service_id == service_id)
+    )
     return result.scalars().all()
 
 
@@ -40,7 +42,7 @@ async def create_schedule(
     service = result.scalars().first()
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
-    assert service is not None  # ayuda a mypy
+    assert service is not None
     if service.provider_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
@@ -82,8 +84,10 @@ async def update_schedule(
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     schedule.day_of_week = schedule_in.day_of_week
-    schedule.start_time = schedule_in.start_time
-    schedule.end_time = schedule_in.end_time
+    # mypy no infiere correctamente los tipos de SQLAlchemy Time -> time,
+    # por eso añadimos los comentarios de ignorar tipo.
+    schedule.start_time = schedule_in.start_time  # type: ignore[assignment]
+    schedule.end_time = schedule_in.end_time      # type: ignore[assignment]
     await db.commit()
     await db.refresh(schedule)
     return schedule
